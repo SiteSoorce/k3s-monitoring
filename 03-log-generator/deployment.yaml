@@ -1,0 +1,43 @@
+# 03-log-generator/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-generator
+  namespace: logging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-generator
+  template:
+    metadata:
+      labels:
+        app: log-generator
+    spec:
+      containers:
+      - name: generator
+        image: alpine:3.18
+        command: ["sh", "-c"]
+        args:
+        - |
+          # Installeer benodigdheden
+          apk add --no-cache curl postgresql-client
+          
+          # Oneindige loop met verschillende log types
+          while true; do
+            # PHP-style logs
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] WARNING: Undefined variable in /app/index.php line 42" | tee /proc/1/fd/1
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: Database connection failed" | tee /proc/1/fd/1
+            
+            # Database-style logs
+            echo "LOG:  duration: 15.2ms  statement: SELECT * FROM users WHERE id = 123" | tee /proc/1/fd/1
+            echo "ERROR:  duplicate key value violates unique constraint" | tee /proc/1/fd/1
+            
+            # Multi-line exception
+            echo -e "EXCEPTION: RuntimeException: File not found\nStack trace:\n#0 /app/lib/File.php(42): File->open()\n#1 /app/index.php(15): include()" | tee /proc/1/fd/1
+            
+            # HTTP request log
+            echo '127.0.0.1 - - [$(date +"%d/%b/%Y:%H:%M:%S %z")] "GET /api/users HTTP/1.1" 200 342' | tee /proc/1/fd/1
+            
+            sleep 10
+          done
