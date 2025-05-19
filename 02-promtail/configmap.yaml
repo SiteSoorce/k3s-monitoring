@@ -13,14 +13,32 @@ data:
       filename: /tmp/positions.yaml
 
     clients:
-      - url: http://loki:3100/loki/api/v1/push
+      - url: http://loki.logging.svc.cluster.local:3100/loki/api/v1/push
         batchwait: 1s
         batchsize: 102400
+        timeout: 10s
 
     scrape_configs:
-    - job_name: static-logs
-      static_configs:
-      - targets: [localhost]
-        labels:
-          job: log-generator
-          __path__: /var/log/pods/logging_log-generator-6b45577664-bb2tw_3d6c3291-6eda-440a-9861-300d42998e39/generator/0.log
+    - job_name: kubernetes-pods
+      kubernetes_sd_configs:
+      - role: pod
+      pipeline_stages:
+      - cri: {}
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: app
+      - source_labels: [__meta_kubernetes_pod_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_pod_container_name]
+        target_label: container
+      - action: replace
+        replacement: $1
+        separator: /
+        source_labels:
+        - __meta_kubernetes_pod_node_name
+        - __meta_kubernetes_pod_namespace
+        - __meta_kubernetes_pod_name
+        - __meta_kubernetes_pod_uid
+        target_label: __path__
