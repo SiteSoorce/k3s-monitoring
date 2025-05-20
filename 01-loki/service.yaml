@@ -5,11 +5,7 @@ metadata:
   namespace: logging
 spec:
   ports:
-    - name: http
-      port: 3100
-      targetPort: 3100
-    - name: grpc
-      port: 9096
-      targetPort: 9096
+  - port: 3100
+    targetPort: 3100
   selector:
     app: loki

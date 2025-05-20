@@ -6,56 +6,40 @@ metadata:
 data:
   local-config.yaml: |
     auth_enabled: false
-
+    
     server:
       http_listen_port: 3100
-      grpc_listen_port: 9096
-
+    
     common:
-      path_prefix: /var/loki
+      path_prefix: /tmp/loki
       storage:
         filesystem:
-          chunks_directory: /var/loki/chunks
-          rules_directory: /var/loki/rules
-      replication_factor: 1
-
+          chunks_directory: /tmp/loki/chunks
+          rules_directory: /tmp/loki/rules
+    
     schema_config:
       configs:
         - from: 2020-10-24
-          store: boltdb-shipper
+          store: boltdb
           object_store: filesystem
           schema: v11
           index:
             prefix: index_
             period: 24h
-
+    
     storage_config:
-      boltdb_shipper:
-        active_index_directory: /var/loki/boltdb-shipper-active
-        cache_location: /var/loki/boltdb-shipper-cache
-        shared_store: filesystem
-
+      boltdb:
+        directory: /tmp/loki/boltdb
+    
     ingester:
       lifecycler:
-        address: 0.0.0.0
         ring:
           kvstore:
             store: inmemory
           replication_factor: 1
-        final_sleep: 0s
-      chunk_idle_period: 5m
-      chunk_target_size: 1048576
-      max_chunk_age: 1h
-
-    limits_config:
-      enforce_metric_name: false
-      reject_old_samples: true
-      reject_old_samples_max_age: 168h
-
+    
     ruler:
       storage:
         type: local
         local:
-          directory: /var/loki/rules
-      rule_path: /var/loki/rules-temp
-      alertmanager_url: http://localhost:9093
+          directory: /tmp/loki/rules

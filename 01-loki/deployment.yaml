@@ -17,60 +17,36 @@ spec:
         fsGroup: 1000
         runAsUser: 1000
       initContainers:
-        - name: init-storage
-          image: alpine:3.18
-          command:
-            - "sh"
-            - "-c"
-            - |
-              mkdir -p /var/loki/boltdb-shipper-active
-              mkdir -p /var/loki/boltdb-shipper-cache
-              mkdir -p /var/loki/chunks
-              mkdir -p /var/loki/rules
-              chmod -R 777 /var/loki
-          volumeMounts:
-            - name: storage
-              mountPath: /var/loki
-          securityContext:
-            runAsUser: 0
+      - name: init-storage
+        image: alpine:3.18
+        command: 
+        - "sh"
+        - "-c"
+        - |
+          mkdir -p /tmp/loki/boltdb
+          mkdir -p /tmp/loki/chunks
+          mkdir -p /tmp/loki/rules
+          chmod -R 777 /tmp/loki
+        volumeMounts:
+        - name: storage
+          mountPath: /tmp/loki
+        securityContext:
+          runAsUser: 0
 
       containers:
-        - name: loki
-          image: grafana/loki:2.8.4
-          args: ["-config.file=/etc/loki/local-config.yaml"]
-          ports:
-            - containerPort: 3100
-              name: http
-            - containerPort: 9096
-              name: grpc
-          volumeMounts:
-            - name: config
-              mountPath: /etc/loki
-            - name: storage
-              mountPath: /var/loki
-          resources:
-            limits:
-              cpu: "1"
-              memory: "2Gi"
-            requests:
-              cpu: "500m"
-              memory: "1Gi"
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 3100
-            initialDelaySeconds: 15
-            timeoutSeconds: 1
-          livenessProbe:
-            httpGet:
-              path: /ready
-              port: 3100
-            initialDelaySeconds: 45
-            timeoutSeconds: 1
-      volumes:
+      - name: loki
+        image: grafana/loki:2.8.4
+        args: ["-config.file=/etc/loki/local-config.yaml"]
+        ports:
+        - containerPort: 3100
+        volumeMounts:
         - name: config
-          configMap:
-            name: loki-config
+          mountPath: /etc/loki
         - name: storage
-          persistentVolumeClaim:
-            claimName: loki-storage
+          mountPath: /tmp/loki
+      volumes:
+      - name: config
+        configMap:
+          name: loki-config
+      - name: storage
+        emptyDir: {}
