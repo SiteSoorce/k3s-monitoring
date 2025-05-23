@@ -4,8 +4,11 @@ metadata:
   name: loki
   namespace: logging
 spec:
-  ports:
-  - port: 3100
-    targetPort: 3100
+  type: NodePort
   selector:
     app: loki
+  ports:
+    - name: http
+      port: 3100
+      targetPort: 3100
+      nodePort: 32100
