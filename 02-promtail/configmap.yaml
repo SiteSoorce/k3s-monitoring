@@ -22,5 +22,5 @@ data:
       static_configs:
       - targets: [localhost]
         labels:
-          job: log-generator
-          __path__: /var/log/pods/logging_log-generator-649c6cc8c4-z24kp_45b57714-b773-4878-abd0-f60d925a9db5/generator/0.log
+          job: k3slogs
+          __path__: /var/log/pods/kube-system*/*/*.log
